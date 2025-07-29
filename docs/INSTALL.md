@@ -56,7 +56,7 @@ cd october-cms-multi
 make setup
 
 # O manual:
-cp env.example .env
+cp .env.example .env
 chmod +x scripts/*.sh
 ```
 

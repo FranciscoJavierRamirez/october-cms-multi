@@ -39,12 +39,12 @@ october-cms-multi/
 ├── Makefile                 # Comandos simplificados
 ├── .env.example             # Variables de entorno
 ├── containers/              # Dockerfiles
-│   ├── v3/                  # PHP 8.1 + October 3.7
-│   └── v4/                  # PHP 8.2 + October 4.0
+│   ├── october-v3/          # PHP 8.1 + October 3.7
+│   └── october-v4/          # PHP 8.2 + October 4.0
 ├── config/                  # Configuraciones
 │   ├── nginx/               # Virtual hosts
-│   ├── php/                 # PHP settings
-│   └── postgres/            # Base de datos
+│   ├── postgres/            # Base de datos
+│   └── redis/               # Cache
 ├── scripts/                 # Scripts auxiliares
 └── volumes/                 # Datos persistentes
     ├── v3/                  # Código October v3.7

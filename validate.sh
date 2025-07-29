@@ -62,7 +62,7 @@ docker info >/dev/null 2>&1 && check "Docker daemon funcionando" || check "Docke
 # Red Docker
 echo ""
 echo "REDES DOCKER:"
-docker network ls | grep -q "october_shared_network" && check "Red october_shared_network existe" || check "Red october_shared_network existe"
+docker network ls | grep -q "october_network" && check "Red october_network existe" || check "Red october_network existe"
 
 # Servicios compartidos
 echo ""
@@ -149,14 +149,13 @@ echo "ESTRUCTURA DE ARCHIVOS:"
 [ -d "v4/october" ] && check "Directorio v4/october existe" || check "Directorio v4/october existe"
 
 # Archivos de configuración
-[ -f "v3/.env" ] && check "Archivo v3/.env existe" || check "Archivo v3/.env existe"
-[ -f "v4/.env" ] && check "Archivo v4/.env existe" || check "Archivo v4/.env existe"
+[ -f ".env" ] && check "Archivo .env existe" || check "Archivo .env existe"
+[ -f ".env.example" ] && check "Archivo .env.example existe" || check "Archivo .env.example existe"
 
 # Scripts ejecutables
-[ -x "master-control.sh" ] && check "master-control.sh es ejecutable" || check "master-control.sh es ejecutable"
-[ -x "shared/manage-shared.sh" ] && check "manage-shared.sh es ejecutable" || check "manage-shared.sh es ejecutable"
-[ -x "v3/manage-v3.sh" ] && check "manage-v3.sh es ejecutable" || check "manage-v3.sh es ejecutable"
-[ -x "v4/manage-v4.sh" ] && check "manage-v4.sh es ejecutable" || check "manage-v4.sh es ejecutable"
+[ -x "scripts/setup.sh" ] && check "scripts/setup.sh es ejecutable" || check "scripts/setup.sh es ejecutable"
+[ -x "scripts/install.sh" ] && check "scripts/install.sh es ejecutable" || check "scripts/install.sh es ejecutable"
+[ -f "Makefile" ] && check "Makefile existe" || check "Makefile existe"
 
 # Resumen
 echo ""
@@ -173,14 +172,14 @@ else
     echo -e "${YELLOW}⚠ Hay problemas que resolver${NC}"
     echo ""
     echo "Sugerencias:"
-    if ! docker ps | grep -q "october_.*_shared.*Up"; then
-        echo "- Iniciar servicios compartidos: cd shared && ./manage-shared.sh start"
+    if ! docker ps | grep -q "october_.*Up"; then
+        echo "- Iniciar todos los servicios: make up"
     fi
-    if ! docker ps | grep -q "october_v3_app.*Up"; then
-        echo "- Iniciar October v3.7: cd v3 && ./manage-v3.sh start"
+    if ! docker ps | grep -q "october_v3.*Up"; then
+        echo "- Verificar October v3.7: make logs-v3"
     fi
-    if ! docker ps | grep -q "october_v4_app.*Up"; then
-        echo "- Iniciar October v4.0: cd v4 && ./manage-v4.sh start"
+    if ! docker ps | grep -q "october_v4.*Up"; then
+        echo "- Verificar October v4.0: make logs-v4"
     fi
     if ! grep -q "october.local" /etc/hosts 2>/dev/null; then
         echo "- Configurar hosts: sudo echo '127.0.0.1 v3.october.local v4.october.local' >> /etc/hosts"
