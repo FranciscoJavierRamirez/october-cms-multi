@@ -361,3 +361,98 @@ El script está diseñado para trabajar solo cuando la infraestructura compartid
 
 [ERROR] PostgreSQL compartido no está corriendo
 [WARN] Ejecuta: /path/to/shared/manage-shared.sh start
+
+
+## 🎯 **Uso script manage-v4.sh**
+
+Este script incluye todas las funcionalidades avanzadas específicas para la versión 4.0:
+🚀 Características Distintivas de v4.0:
+🆕 Comandos Exclusivos v4.0:
+
+optimize - Optimizaciones específicas de Laravel 12
+compare - Comparación lado a lado con v3.7
+Verificaciones v4.0 - Features específicas del nuevo dashboard
+
+⚡ Optimizaciones Laravel 12:
+
+./v4/manage-v4.sh optimize
+
+Config cache optimizado
+Route cache mejorado
+View cache avanzado
+Event cache (nuevo en Laravel 12)
+Asset compilation para v4.0
+
+🔍 Función de Comparación:
+
+./v4/manage-v4.sh compare
+
+Compara versiones de October, Laravel y PHP
+Muestra características únicas de v4.0
+URLs de acceso para ambas versiones
+Indica si ambas versiones están corriendo
+
+🛠️ Diferencias Técnicas Clave:
+Base de Datos Separada:
+
+v3.7: Schema october_v3, Redis DB 0
+v4.0: Schema october_v4, Redis DB 1
+
+Versiones de Software:
+
+v3.7: Laravel 10 + PHP 8.1
+v4.0: Laravel 12 + PHP 8.2
+
+Características Avanzadas v4.0:
+
+✨ Nuevo Dashboard mejorado
+🔒 Enhanced Security features
+⚡ Performance optimizations
+🎨 Modern UI/UX
+📱 Better mobile support
+
+📋 Instalación Específica v4.0:
+
+./v4/manage-v4.sh install
+
+Descarga October v4.0 específico
+Configura Laravel 12 optimizations
+Habilita nuevo dashboard
+Crea admin para v4.0 (admin-v4@localhost)
+Aplica cache optimizations automáticamente
+
+💾 Sistema de Backup Avanzado:
+
+Backup del schema october_v4 únicamente
+Incluye cache optimizations de Laravel 12
+Información detallada de características v4.0
+Restore con verificación de features
+
+🎯 Flujo de Uso Comparativo:
+# Infraestructura compartida
+cd shared && ./manage-shared.sh start
+
+# Iniciar ambas versiones
+cd ../v3 && ./manage-v3.sh start
+cd ../v4 && ./manage-v4.sh start
+
+# Comparar lado a lado
+cd ../v4 && ./manage-v4.sh compare
+
+# Acceder a ambas versiones:
+# http://v3.october.local (October 3.7)
+# http://v4.october.local (October 4.0)
+
+🔧 Comandos Únicos v4.0:
+
+# Optimizar para producción
+./v4/manage-v4.sh optimize
+
+# Ver características v4.0
+./v4/manage-v4.sh status
+
+# Comparar con v3.7
+./v4/manage-v4.sh compare
+
+# Backup con features v4.0
+./v4/manage-v4.sh backup
