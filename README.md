@@ -1,271 +1,203 @@
 # October CMS Multi-Version Development Environment
 
-🚀 **Entorno de desarrollo completo y optimizado para ejecutar October CMS v3.7 y v4.0 simultáneamente con Docker.**
+Un entorno de desarrollo Docker optimizado para ejecutar **October CMS v3.7** y **v4.0** simultáneamente, perfecto para pruebas de compatibilidad y migración.
 
-[![October CMS](https://img.shields.io/badge/October%20CMS-3.7%20%7C%204.0-blue)](https://octobercms.com/)
-[![Docker](https://img.shields.io/badge/Docker-20.10+-blue)](https://docker.com/)
-[![PHP](https://img.shields.io/badge/PHP-8.1%20%7C%208.2-purple)](https://php.net/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)](https://postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-7-red)](https://redis.io/)
+## 🚀 Inicio Rápido
 
-## ✨ Características
+```bash
+# 1. Clonar el repositorio
+git clone <repository-url>
+cd october-cms-multi
 
-- **🔄 Multi-Versión**: October CMS v3.7 (Laravel 10) y v4.0 (Laravel 12) ejecutándose simultáneamente
-- **🐳 Dockerizado**: Entorno completamente containerizado y aislado
-- **🗄️ PostgreSQL**: Base de datos compartida con esquemas separados
-- **⚡ Redis**: Cache y sesiones optimizadas
-- **🌐 NGINX**: Servidor web optimizado con virtual hosts
-- **📧 MailHog**: Captura de emails para desarrollo
-- **💾 Adminer**: Interfaz web para gestión de base de datos
-- **🛠️ Scripts**: Automatización completa de setup, instalación y validación
+# 2. Configuración inicial
+make setup
+
+# 3. Iniciar servicios
+make up
+
+# 4. Instalar October CMS
+make install
+
+# 5. ¡Listo! Acceder a:
+# - October v3.7: http://v3.october.local
+# - October v4.0: http://v4.october.local
+```
+
+## 📋 Requisitos
+
+- **Docker**: 20.10+
+- **Docker Compose**: 2.0+
+- **Sistema**: Linux, macOS, o Windows con WSL2
+- **RAM**: 4GB mínimo
+- **Espacio**: 5GB libres
 
 ## 🏗️ Arquitectura
 
 ```
 october-cms-multi/
-├── docker-compose.yml           # Orquestación principal
-├── Makefile                     # Comandos simplificados
-├── env.example                  # Variables de entorno
-├── scripts/                     # Scripts de automatización
-│   ├── setup.sh                 # Configuración inicial
-│   ├── install.sh               # Instalación de October
-│   ├── validate.sh              # Validación del entorno
-│   └── quick-start.sh           # Inicio rápido automatizado
-├── config/                      # Configuraciones de servicios
-│   ├── nginx/                   # Configuración NGINX
-│   ├── postgres/                # Configuración PostgreSQL
-│   └── redis/                   # Configuración Redis
-├── containers/                  # Dockerfiles personalizados
-│   ├── october-v3/              # Container October v3.7
-│   └── october-v4/              # Container October v4.0
-├── volumes/                     # Datos persistentes
-│   ├── october-v3/              # Código October v3.7
-│   ├── october-v4/              # Código October v4.0
-│   └── data/                    # Datos de base de datos, logs
-└── docs/                        # Documentación detallada
+├── docker-compose.yml       # Orquestación de servicios
+├── Makefile                 # Comandos simplificados
+├── .env.example             # Variables de entorno
+├── containers/              # Dockerfiles
+│   ├── v3/                  # PHP 8.1 + October 3.7
+│   └── v4/                  # PHP 8.2 + October 4.0
+├── config/                  # Configuraciones
+│   ├── nginx/               # Virtual hosts
+│   ├── php/                 # PHP settings
+│   └── postgres/            # Base de datos
+├── scripts/                 # Scripts auxiliares
+└── volumes/                 # Datos persistentes
+    ├── v3/                  # Código October v3.7
+    ├── v4/                  # Código October v4.0
+    └── data/                # PostgreSQL, Redis, logs
 ```
 
-## 🚀 Inicio Rápido
+## 🛠️ Configuración
 
-### Opción 1: Script Automatizado (Recomendado)
+### 1. Configurar Hosts
 
-```bash
-git clone <repository-url>
-cd october-cms-multi
-./scripts/quick-start.sh
+Agregar a `/etc/hosts` (Linux/macOS) o `C:\Windows\System32\drivers\etc\hosts` (Windows):
+
+```
+127.0.0.1 v3.october.local v4.october.local
 ```
 
-### Opción 2: Manual
+### 2. Variables de Entorno
+
+Copiar y ajustar si es necesario:
 
 ```bash
-# 1. Configuración inicial
-make setup
+cp .env.example .env
+```
 
-# 2. Iniciar servicios
-make up
+### 3. Permisos (Linux/macOS)
 
-# 3. Instalar October CMS
-make install
+```bash
+chmod +x scripts/*.sh
+```
 
-# 4. Validar instalación
-make validate
+## 📚 Comandos Disponibles
+
+### Gestión de Servicios
+
+```bash
+make up         # Iniciar todos los servicios
+make down       # Detener todos los servicios
+make restart    # Reiniciar servicios
+make status     # Ver estado
+make logs       # Ver logs en tiempo real
+```
+
+### Instalación
+
+```bash
+make install      # Instalar ambas versiones
+make install-v3   # Instalar solo v3.7
+make install-v4   # Instalar solo v4.0
+```
+
+### Desarrollo
+
+```bash
+make shell-v3     # Acceder al shell de v3.7
+make shell-v4     # Acceder al shell de v4.0
+make logs-v3      # Ver logs de v3.7
+make logs-v4      # Ver logs de v4.0
+```
+
+### Artisan Commands
+
+```bash
+make artisan-v3 CMD="make:plugin Acme.Blog"
+make artisan-v4 CMD="migrate:fresh"
+```
+
+### Mantenimiento
+
+```bash
+make test       # Verificar servicios
+make rebuild    # Reconstruir containers
+make clean      # Limpiar todo (¡CUIDADO!)
 ```
 
 ## 🌐 URLs de Acceso
 
-| Servicio | URL | Credenciales |
-|----------|-----|--------------|
-| **October CMS v3.7** | http://v3.october.local | admin@localhost / admin123 |
-| **October CMS v4.0** | http://v4.october.local | admin@localhost / admin123 |
-| **Adminer** | http://localhost:8080 | october_user / october_pass_2024 |
-| **MailHog** | http://localhost:8025 | - |
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| **October v3.7** | http://v3.october.local | October CMS 3.7 (Laravel 10) |
+| **October v4.0** | http://v4.october.local | October CMS 4.0 (Laravel 12) |
+| **Adminer** | http://localhost:8080 | Gestión de base de datos |
+| **MailHog** | http://localhost:8025 | Captura de emails |
 
-## 🛠️ Comandos Disponibles
+## 🔑 Credenciales
+
+### October CMS Admin
+- **Email**: admin@localhost
+- **Password**: admin123
+
+### Base de Datos
+- **Host**: localhost:5432
+- **Usuario**: october_user
+- **Password**: october_pass_2024
+- **Database**: october_db
+
+## 🧪 Pruebas de Compatibilidad
+
+### Workflow Recomendado
+
+1. **Desarrollar en v3.7**
+   ```bash
+   make shell-v3
+   cd plugins/acme/demo
+   # Desarrollar plugin...
+   ```
+
+2. **Copiar a v4.0**
+   ```bash
+   cp -r volumes/v3/plugins/acme volumes/v4/plugins/
+   ```
+
+3. **Probar en v4.0**
+   ```bash
+   make artisan-v4 CMD="plugin:refresh Acme.Demo"
+   ```
+
+4. **Verificar logs**
+   ```bash
+   make logs-v4
+   ```
+
+### Diferencias Clave
+
+| Característica | v3.7 | v4.0 |
+|----------------|------|------|
+| **PHP** | 8.1 | 8.2 |
+| **Laravel** | 10 | 12 |
+| **Backend** | Clásico | Nuevo Dashboard |
+| **Prefijo DB** | v3_ | v4_ |
+| **Redis DB** | 0 | 1 |
+
+## 🔧 Solución de Problemas
+
+### Los hosts no funcionan
 
 ```bash
-# Gestión de servicios
-make up               # Iniciar todos los servicios
-make down             # Detener todos los servicios
-make status           # Ver estado de servicios
-make rebuild          # Reconstruir containers
+# Verificar hosts
+ping v3.october.local
 
-# Instalación
-make install          # Instalar ambas versiones
-make install-v3       # Instalar solo October v3.7
-make install-v4       # Instalar solo October v4.0
-
-# Desarrollo
-make shell-v3         # Acceder al shell de v3.7
-make shell-v4         # Acceder al shell de v4.0
-make logs             # Ver todos los logs
-make logs-v3          # Ver logs de v3.7
-make logs-v4          # Ver logs de v4.0
-
-# Artisan Commands
-make artisan-v3 CMD="make:plugin Acme.Blog"
-make artisan-v4 CMD="make:plugin Acme.Blog"
-
-# Utilidades
-make validate         # Validar entorno
-make clean            # Limpiar todo (¡CUIDADO!)
+# Si falla, agregar manualmente:
+sudo echo "127.0.0.1 v3.october.local v4.october.local" >> /etc/hosts
 ```
 
-## 🔧 Requisitos del Sistema
+### Puerto ocupado
 
-- **Docker**: 20.10+
-- **Docker Compose**: 2.0+
-- **RAM**: 4GB mínimo, 8GB recomendado
-- **Almacenamiento**: 10GB libres
-- **Sistema Operativo**: Linux, macOS, Windows (WSL2)
-
-## 📊 Especificaciones Técnicas
-
-### October CMS v3.7
-- **PHP**: 8.1 con OPcache y JIT
-- **Laravel**: 10
-- **Base de datos**: PostgreSQL (prefijo `v3_`)
-- **Cache**: Redis (database 0)
-- **Backend**: Clásico
-
-### October CMS v4.0
-- **PHP**: 8.2 con JIT optimizado
-- **Laravel**: 12
-- **Base de datos**: PostgreSQL (prefijo `v4_`)
-- **Cache**: Redis (database 1)
-- **Backend**: Nuevo Dashboard
-
-### Infraestructura
-- **NGINX**: Alpine con configuraciones optimizadas
-- **PostgreSQL**: 15 Alpine con configuración para desarrollo
-- **Redis**: 7 Alpine con persistencia configurada
-
-## 🔒 Seguridad
-
-- Limitación de velocidad configurada en NGINX
-- Headers de seguridad implementados
-- Usuarios no privilegiados en containers
-- Configuraciones de PHP endurecidas
-- Aislamiento de red entre servicios
-
-## 📚 Documentación
-
-- [📖 Guía de Instalación](docs/INSTALL.md)
-- [🎯 Guía de Uso](docs/USAGE.md)
-- [🔧 Solución de Problemas](docs/TROUBLESHOOTING.md)
-
-## 🐛 Solución de Problemas
-
-### Problemas Comunes
-
-**¿Los hosts no funcionan?**
 ```bash
-# Agregar a /etc/hosts (Linux/macOS)
-echo "127.0.0.1 v3.october.local v4.october.local" | sudo tee -a /etc/hosts
-```
-
-**¿Puertos ocupados?**
-```bash
-# Cambiar puertos en .env
+# Cambiar en .env
 HTTP_PORT=8000
 POSTGRES_PORT=5433
 ```
 
-**¿Containers no inician?**
+### Container no inicia
+
 ```bash
 # Ver logs detallados
-make logs
-
-# Reconstruir containers
-make rebuild
-```
-
-## 🤝 Desarrollo
-
-### Estructura de Desarrollo
-
-```bash
-# Trabajar con plugins
-volumes/october-v3/plugins/acme/demo/
-volumes/october-v4/plugins/acme/demo/
-
-# Trabajar con temas
-volumes/october-v3/themes/
-volumes/october-v4/themes/
-```
-
-### Testing de Compatibilidad
-
-1. Desarrollar en v3.7
-2. Copiar plugin/tema a v4.0
-3. Probar funcionalidad
-4. Ajustar para compatibilidad
-
-## 📈 Performance
-
-### Optimizaciones Implementadas
-
-- **PHP OPcache** con JIT habilitado
-- **NGINX** con gzip y cache de assets
-- **PostgreSQL** optimizado para desarrollo
-- **Redis** como cache de aplicación y sesiones
-- **Connection pooling** en upstreams
-
-### Monitoreo
-
-```bash
-# Ver estadísticas de containers
-docker stats
-
-# Ver logs de performance
-make logs | grep -i "slow\|error\|timeout"
-```
-
-## 🔄 Actualización
-
-```bash
-# Actualizar código
-git pull origin main
-
-# Reconstruir containers
-make rebuild
-
-# Validar cambios
-make validate
-```
-
-## 🌟 Características Avanzadas
-
-- **Hot Reload**: Cambios en código reflejados inmediatamente
-- **Debug Tools**: Logs centralizados y debugging habilitado
-- **Multi-Environment**: Configuración para desarrollo, staging y producción
-- **Backup/Restore**: Scripts automatizados incluidos
-- **Health Checks**: Verificación automática de servicios
-
-## 📝 Changelog
-
-### v2.0.0 (Actual)
-- ✨ Arquitectura completamente reorganizada
-- 🚀 Scripts de automatización mejorados
-- 🏗️ Configuraciones optimizadas para performance
-- 📚 Documentación completa actualizada
-- 🛠️ Makefile simplificado
-- 🐳 Dockerfiles optimizados para cada versión
-
-### v1.0.0
-- 🎯 Configuración inicial multi-versión
-- 🐳 Containerización básica
-- 📊 Servicios fundamentales
-
-## 📞 Soporte
-
-- **Issues**: [GitHub Issues](https://github.com/usuario/october-cms-multi/issues)
-- **Email**: framirez@healthytek.cl
-- **Documentación**: [Wiki del Proyecto](https://github.com/usuario/october-cms-multi/wiki)
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
-
----
-
-**Desarrollado con ❤️ para la comunidad October CMS**

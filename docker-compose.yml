@@ -2,114 +2,99 @@ version: '3.8'
 
 services:
   # ============================================
-  # INFRAESTRUCTURA COMPARTIDA
+  # BASE DE DATOS COMPARTIDA
   # ============================================
-  
   postgres:
     image: postgres:15-alpine
     container_name: october_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-october_shared}
-      POSTGRES_USER: ${POSTGRES_USER:-october_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-october_pass_2024}
-      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: october_db
+      POSTGRES_USER: october_user
+      POSTGRES_PASSWORD: october_pass_2024
     volumes:
       - ./volumes/data/postgres:/var/lib/postgresql/data
-      - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-      - ./config/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "5432:5432"
     networks:
       - october_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-october_user} -d ${POSTGRES_DB:-october_shared}"]
+      test: ["CMD-SHELL", "pg_isready -U october_user"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ============================================
+  # REDIS COMPARTIDO
+  # ============================================
   redis:
     image: redis:7-alpine
     container_name: october_redis
     restart: unless-stopped
     volumes:
       - ./volumes/data/redis:/data
-      - ./config/redis/redis.conf:/etc/redis/redis.conf:ro
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "6379:6379"
     networks:
       - october_network
-    command: redis-server /etc/redis/redis.conf
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 3
 
+  # ============================================
+  # NGINX
+  # ============================================
   nginx:
     image: nginx:alpine
     container_name: october_nginx
     restart: unless-stopped
     ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
+      - "80:80"
     volumes:
       - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./config/nginx/sites/:/etc/nginx/conf.d/:ro
-      - ./config/nginx/fastcgi.conf:/etc/nginx/fastcgi.conf:ro
+      - ./config/nginx/v3.conf:/etc/nginx/conf.d/v3.conf:ro
+      - ./config/nginx/v4.conf:/etc/nginx/conf.d/v4.conf:ro
+      - ./volumes/v3:/var/www/v3:ro
+      - ./volumes/v4:/var/www/v4:ro
       - ./volumes/data/logs/nginx:/var/log/nginx
-      - ./volumes/october-v3:/var/www/v3:ro
-      - ./volumes/october-v4:/var/www/v4:ro
     networks:
       - october_network
     depends_on:
-      - postgres
-      - redis
       - october-v3
       - october-v4
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # ============================================
   # OCTOBER CMS v3.7
   # ============================================
-  
   october-v3:
     build:
-      context: ./containers/october-v3
+      context: ./containers/v3
       dockerfile: Dockerfile
     container_name: october_v3
     restart: unless-stopped
     volumes:
-      - ./volumes/october-v3:/var/www/html
-      - ./volumes/data/logs/v3:/var/log/php
+      - ./volumes/v3:/var/www/html
+      - ./config/php/v3-php.ini:/usr/local/etc/php/php.ini:ro
     environment:
-      - OCTOBER_ENV=${OCTOBER_ENV:-development}
-      - OCTOBER_DEBUG=${OCTOBER_DEBUG:-true}
-      - OCTOBER_URL=${OCTOBER_V3_URL:-http://v3.october.local}
+      - OCTOBER_ENV=development
       - OCTOBER_VERSION=3.7
-      - LARAVEL_VERSION=10
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_DATABASE=${POSTGRES_DB:-october_shared}
-      - DB_USERNAME=${POSTGRES_USER:-october_user}
-      - DB_PASSWORD=${POSTGRES_PASSWORD:-october_pass_2024}
+      - DB_DATABASE=october_db
+      - DB_USERNAME=october_user
+      - DB_PASSWORD=october_pass_2024
       - DB_PREFIX=v3_
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DATABASE=0
-      - CACHE_STORE=redis
-      - SESSION_DRIVER=redis
-      - QUEUE_DRIVER=redis
-      - MAIL_DRIVER=smtp
+      - MAIL_MAILER=smtp
       - MAIL_HOST=mailhog
       - MAIL_PORT=1025
-      - MAIL_FROM_ADDRESS=noreply-v3@localhost
-      - MAIL_FROM_NAME="October CMS v3.7"
     networks:
       - october_network
     depends_on:
@@ -117,50 +102,35 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "php-fpm8.1", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # ============================================
   # OCTOBER CMS v4.0
   # ============================================
-  
   october-v4:
     build:
-      context: ./containers/october-v4
+      context: ./containers/v4
       dockerfile: Dockerfile
     container_name: october_v4
     restart: unless-stopped
     volumes:
-      - ./volumes/october-v4:/var/www/html
-      - ./volumes/data/logs/v4:/var/log/php
+      - ./volumes/v4:/var/www/html
+      - ./config/php/v4-php.ini:/usr/local/etc/php/php.ini:ro
     environment:
-      - OCTOBER_ENV=${OCTOBER_ENV:-development}
-      - OCTOBER_DEBUG=${OCTOBER_DEBUG:-true}
-      - OCTOBER_URL=${OCTOBER_V4_URL:-http://v4.october.local}
+      - OCTOBER_ENV=development
       - OCTOBER_VERSION=4.0
-      - LARAVEL_VERSION=12
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_DATABASE=${POSTGRES_DB:-october_shared}
-      - DB_USERNAME=${POSTGRES_USER:-october_user}
-      - DB_PASSWORD=${POSTGRES_PASSWORD:-october_pass_2024}
+      - DB_DATABASE=october_db
+      - DB_USERNAME=october_user
+      - DB_PASSWORD=october_pass_2024
       - DB_PREFIX=v4_
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DATABASE=1
-      - CACHE_STORE=redis
-      - SESSION_DRIVER=redis
-      - QUEUE_DRIVER=redis
-      - MAIL_DRIVER=smtp
+      - MAIL_MAILER=smtp
       - MAIL_HOST=mailhog
       - MAIL_PORT=1025
-      - MAIL_FROM_ADDRESS=noreply-v4@localhost
-      - MAIL_FROM_NAME="October CMS v4.0"
-      - NEW_DASHBOARD_ENABLED=true
     networks:
       - october_network
     depends_on:
@@ -168,51 +138,34 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "php-fpm8.2", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # ============================================
   # HERRAMIENTAS DE DESARROLLO
   # ============================================
-  
   mailhog:
     image: mailhog/mailhog:latest
     container_name: october_mailhog
     restart: unless-stopped
     ports:
-      - "${MAILHOG_WEB_PORT:-8025}:8025"
-      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "8025:8025"
+      - "1025:1025"
     networks:
       - october_network
-    profiles:
-      - dev
 
   adminer:
     image: adminer:4.8.1
     container_name: october_adminer
     restart: unless-stopped
     ports:
-      - "${ADMINER_PORT:-8080}:8080"
+      - "8080:8080"
     environment:
       ADMINER_DEFAULT_SERVER: postgres
-      ADMINER_DESIGN: pepa-linha
     networks:
       - october_network
     depends_on:
       - postgres
-    profiles:
-      - dev
 
 networks:
   october_network:
     name: october_network
     driver: bridge
-
-volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local 
