@@ -201,3 +201,12 @@ POSTGRES_PORT=5433
 
 ```bash
 # Ver logs detallados
+
+   **Accesos**
+
+Para acceder al backend de October CMS v3.7:
+URL de login: http://localhost/admin
+Usuario: admin
+Email: admin@example.com
+Contraseña: password
+
