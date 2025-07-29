@@ -1,0 +1,113 @@
+# v4/docker-compose.yml
+# October CMS v4.0 - Solo aplicación (usa infraestructura compartida)
+
+version: '3.8'
+
+services:
+  # ============================================
+  # OCTOBER CMS v4.0 - Solo aplicación
+  # ============================================
+  october-v4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: october_v4_app
+    restart: unless-stopped
+    volumes:
+      # Código de la aplicación
+      - ./october:/var/www/html
+      
+      # Logs de PHP
+      - ../data/logs/v4:/var/log/php
+      
+      # Composer cache
+      - ../data/composer-v4:/home/october/.composer
+      
+    environment:
+      # ===== CONFIGURACIÓN OCTOBER CMS v4.0 =====
+      - OCTOBER_ENV=${OCTOBER_ENV:-development}
+      - OCTOBER_DEBUG=${OCTOBER_DEBUG:-true}
+      - OCTOBER_URL=${OCTOBER_URL:-http://v4.october.local}
+      - OCTOBER_VERSION=4.0
+      - LARAVEL_VERSION=12
+      
+      # ===== BASE DE DATOS COMPARTIDA =====
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres-shared
+      - DB_PORT=5432
+      - DB_DATABASE=october_shared
+      - DB_USERNAME=october_user
+      - DB_PASSWORD=october_shared_2024
+      - DB_PREFIX=v4_
+      - DB_SCHEMA=october_v4
+      
+      # ===== REDIS COMPARTIDO =====
+      - REDIS_HOST=redis-shared
+      - REDIS_PORT=6379
+      - REDIS_DATABASE=1
+      - CACHE_STORE=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_DRIVER=redis
+      
+      # ===== CORREO COMPARTIDO =====
+      - MAIL_DRIVER=smtp
+      - MAIL_HOST=mailhog-shared
+      - MAIL_PORT=1025
+      - MAIL_FROM_ADDRESS=noreply-v4@localhost
+      - MAIL_FROM_NAME="October CMS v4.0"
+      
+      # ===== CONFIGURACIÓN ADMIN =====
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin-v4@localhost}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123v4}
+      - ADMIN_FIRST_NAME=${ADMIN_FIRST_NAME:-Admin}
+      - ADMIN_LAST_NAME=${ADMIN_LAST_NAME:-v4.0}
+      
+      # ===== NUEVA FUNCIONALIDAD v4.0 =====
+      - NEW_DASHBOARD_ENABLED=true
+      - OCTOBER_BUILDER_ENABLE=true
+      - OCTOBER_BUILDER_VERSION=4.x
+      
+    networks:
+      - october_shared_network
+    external_links:
+      - postgres-shared:postgres-shared
+      - redis-shared:redis-shared
+      - mailhog-shared:mailhog-shared
+    healthcheck:
+      test: ["CMD", "php-fpm8.2", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+# ============================================
+# REDES (usar la compartida)
+# ============================================
+networks:
+  october_shared_network:
+    external: true
+
+# ============================================
+# VOLÚMENES
+# ============================================
+volumes:
+  october_v4_code:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./october
+
+  october_v4_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../data/logs/v4
+
+  composer_cache_v4:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../data/composer-v4
