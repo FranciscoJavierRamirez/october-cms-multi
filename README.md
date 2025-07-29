@@ -231,3 +231,133 @@ chmod +x shared/manage-shared.sh
 # Ayuda completa
 ./shared/manage-shared.sh help
 
+
+## 🎯 **Uso script manage-v3.sh**
+
+
+🎯 Características Principales:
+📋 Comandos Disponibles:
+
+start - Iniciar October v3.7 (verifica infraestructura compartida)
+stop/restart - Control del container
+install - Instalación automática completa de October v3.7
+status - Estado detallado con health checks
+artisan <cmd> - Proxy para comandos Artisan
+composer <cmd> - Proxy para comandos Composer
+shell - Acceso directo al container
+logs [-f] - Visualización de logs
+backup/restore - Sistema completo de backup
+clean - Limpieza total (files, DB schema, logs)
+update - Actualización de October y dependencias
+
+🛠️ Funcionalidades Técnicas:
+Verificaciones Inteligentes:
+
+Dependencias del sistema (Docker, Docker Compose)
+Estado de infraestructura compartida (red, PostgreSQL, Redis)
+Estado de instalación de October
+Health checks de PHP-FPM, DB y Redis
+
+Instalación Automática:
+./v3/manage-v3.sh install
+
+Descarga October v3.7 via Composer
+Configura .env automáticamente
+Ejecuta migraciones
+Crea usuario admin (admin-v3@localhost / admin123v3)
+Instala Builder Plugin
+Configura permisos correctos
+
+Sistema de Backup Específico:
+
+Backup solo del esquema october_v3 (no afecta v4)
+Backup de archivos de aplicación comprimidos
+Backup de configuraciones (.env, docker-compose)
+Restore selectivo con confirmación
+Información detallada del backup
+
+Integración con Infraestructura Compartida:
+
+Verifica automáticamente que la infraestructura esté corriendo
+Usa la red Docker compartida october_shared_network
+Conecta a PostgreSQL y Redis compartidos
+Esquema de DB separado (october_v3)
+Logs independientes en /data/logs/v3
+
+⚙️ Configuración Automática:
+Variables de Entorno (.env):
+
+# Se crea automáticamente con:
+- October v3.7 específico
+- Laravel 10
+- PHP 8.1
+- Conexión a infraestructura compartida
+- Configuración de admin predefinida
+- Builder Plugin habilitado
+
+Comandos de Desarrollo:
+
+# Artisan commands
+./v3/manage-v3.sh artisan october:version
+./v3/manage-v3.sh artisan make:plugin Author.Plugin
+./v3/manage-v3.sh artisan october:migrate
+
+# Composer operations
+./v3/manage-v3.sh composer require vendor/package
+./v3/manage-v3.sh composer update
+
+# Shell access
+./v3/manage-v3.sh shell
+
+🔍 Status y Monitoreo:
+
+./v3/manage-v3.sh status
+
+Muestra:
+
+Estado del container
+Versión de October instalada
+Lista de plugins
+Health checks (PHP-FPM, DB, Redis)
+URLs de acceso
+Credenciales de admin
+
+💾 Backup y Restore:
+# Crear backup
+./v3/manage-v3.sh backup
+
+# Listar backups disponibles
+./v3/manage-v3.sh restore
+# └── Muestra: /data/backups/v3/v3_20250728_143022/
+
+# Restaurar backup específico
+./v3/manage-v3.sh restore /path/to/backup
+
+📝 Flujo de Uso Típico:
+# 1. Iniciar infraestructura compartida
+cd shared && ./manage-shared.sh start
+
+# 2. Iniciar October v3.7
+cd ../v3 && ./manage-v3.sh start
+
+# 3. Instalar October (primera vez)
+./manage-v3.sh install
+
+# 4. Verificar estado
+./manage-v3.sh status
+
+# 5. Desarrollo
+./manage-v3.sh artisan make:plugin MyAuthor.MyPlugin
+./manage-v3.sh shell
+
+🌐 URLs de Acceso:
+
+Frontend: http://v3.october.local
+Backend: http://v3.october.local/admin
+Admin: admin-v3@localhost / admin123v3
+
+🔗 Integración con Infraestructura:
+El script está diseñado para trabajar solo cuando la infraestructura compartida está activa. Si no está corriendo, te guía automáticamente:
+
+[ERROR] PostgreSQL compartido no está corriendo
+[WARN] Ejecuta: /path/to/shared/manage-shared.sh start
