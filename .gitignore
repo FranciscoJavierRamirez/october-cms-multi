@@ -1,22 +1,22 @@
-# 14. .gitignore (root)
-# Docker volumes
-data/
-v3/october/
-v4/october/
+# Docker volumes y datos
+volumes/october-v3/
+volumes/october-v4/
+volumes/data/
 
 # Environment files
 .env
+env.example
 *.env.local
 *.env.production
 
-# IDE
+# IDE y editores
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 
-# OS
+# Sistema operativo
 .DS_Store
 Thumbs.db
 
@@ -32,3 +32,18 @@ composer.lock
 node_modules/
 package-lock.json
 yarn.lock
+
+# Backups
+backups/
+*.sql
+*.tar.gz
+
+# Temporal
+tmp/
+temp/
+
+# Legacy directories (old structure)
+shared/
+v3/
+v4/
+data/
