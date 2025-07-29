@@ -1,0 +1,25 @@
+# shared/nginx/templates/october.conf.template
+server {
+    listen 80;
+    server_name ${SERVER_NAME};
+    
+    root /var/www/html;
+    index index.php;
+    
+    # Logs
+    access_log /var/log/nginx/${VERSION}_access.log main;
+    error_log /var/log/nginx/${VERSION}_error.log warn;
+    
+    # Headers
+    add_header X-October-Version "${OCTOBER_VERSION}" always;
+    add_header X-Laravel-Version "${LARAVEL_VERSION}" always;
+    
+    # Include reglas comunes
+    include /etc/nginx/october-common.conf;
+    
+    # PHP handler
+    location ~ \.php$ {
+        fastcgi_pass ${BACKEND_NAME};
+        include /etc/nginx/fastcgi-october.conf;
+    }
+}
