@@ -57,8 +57,8 @@ services:
       - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./config/nginx/sites/v3.conf:/etc/nginx/conf.d/v3.conf:ro
       - ./config/nginx/sites/v4.conf:/etc/nginx/conf.d/v4.conf:ro
-      - ./volumes/v3:/var/www/html:ro
-      - ./volumes/v4:/var/www/html:ro
+      - ./volumes/v3:/var/www/v3:ro
+      - ./volumes/v4:/var/www/v4:ro
       - ./volumes/data/logs/nginx:/var/log/nginx
     networks:
       - october_network
