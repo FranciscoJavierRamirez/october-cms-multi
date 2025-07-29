@@ -12,7 +12,7 @@ services:
       POSTGRES_USER: october_user
       POSTGRES_PASSWORD: october_pass_2024
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./volumes/data/postgres:/var/lib/postgresql/data
       - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "5432:5432"
@@ -170,5 +170,3 @@ networks:
   october_network:
     name: october_network
     driver: bridge
-volumes:
-  postgres_data:
