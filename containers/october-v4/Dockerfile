@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 # Arguments
 ARG OCTOBER_VERSION=4.0
-ARG PHP_VERSION=8.2
+ARG PHP_VERSION=8.1
 
 # Labels
 LABEL maintainer="framirez@healthytek.cl" \
@@ -29,9 +29,6 @@ RUN apt-get update && apt-get install -y \
     php${PHP_VERSION}-xml php${PHP_VERSION}-zip php${PHP_VERSION}-bcmath \
     php${PHP_VERSION}-mysql php${PHP_VERSION}-pgsql php${PHP_VERSION}-sqlite3 \
     php${PHP_VERSION}-intl php${PHP_VERSION}-opcache php${PHP_VERSION}-redis \
-    php${PHP_VERSION}-imagick php${PHP_VERSION}-pcntl php${PHP_VERSION}-posix \
-    php${PHP_VERSION}-sockets php${PHP_VERSION}-tokenizer php${PHP_VERSION}-fileinfo \
-    php${PHP_VERSION}-iconv \
     # Process manager
     supervisor \
     && rm -rf /var/lib/apt/lists/* \
