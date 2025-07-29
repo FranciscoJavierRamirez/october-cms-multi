@@ -167,4 +167,67 @@ cd ../v4 && ./manage-v4.sh start
 4. **Script maestro** para orquestación
 5. **Testing** de la arquitectura completa
 
-¿Procedo con la implementación de esta arquitectura?
+
+## 🎯 **Uso script manage-shared.sh**
+
+El script manage-shared.sh completo para gestionar la infraestructura compartida. Este script incluye todas las funcionalidades necesarias:
+🎯 Características Principales:
+📋 Comandos Disponibles:
+
+start [profile] - Iniciar infraestructura (development/production)
+stop - Detener servicios
+restart - Reiniciar servicios
+status - Estado completo del sistema
+logs [service] [-f] - Ver logs (con opción follow)
+backup - Backup automático con timestamp
+restore <path> - Restaurar desde backup
+clean - Limpieza completa
+update - Actualizar imágenes Docker
+debug - Información de troubleshooting
+
+🛠️ Funcionalidades Técnicas:
+
+Verificación de dependencias (Docker, permisos)
+Creación automática de directorios de datos
+Gestión de red Docker compartida
+Health checks para todos los servicios
+Inicio secuencial (DB primero, luego web)
+Backups completos (PostgreSQL por esquemas, Redis, configs)
+Colores y logging estructurado
+Perfiles development/production
+
+💾 Sistema de Backup:
+
+Backup completo de PostgreSQL (full + por esquemas)
+Backup de Redis
+Backup de configuraciones NGINX
+Información detallada del backup
+Restore con confirmación de seguridad
+
+🔍 Monitoreo y Debug:
+
+Estado de todos los containers
+Health checks específicos por servicio
+URLs de acceso directo
+Información del sistema
+Verificación de archivos requeridos
+
+📝 Uso del Script:
+# Hacer ejecutable
+chmod +x shared/manage-shared.sh
+
+# Iniciar infraestructura para desarrollo
+./shared/manage-shared.sh start
+
+# Ver estado completo
+./shared/manage-shared.sh status
+
+# Ver logs de NGINX en tiempo real
+./shared/manage-shared.sh logs nginx-shared -f
+
+# Crear backup
+./shared/manage-shared.sh backup
+
+# Ayuda completa
+./shared/manage-shared.sh help
+
