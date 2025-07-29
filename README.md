@@ -1,458 +1,180 @@
-# 🏗️ Arquitectura October CMS - Scripts Separados
+# October CMS Multi-Version Docker
 
-## 📁 Estructura del Proyecto
+Arquitectura Docker simplificada para ejecutar October CMS v3.7 y v4.0 simultáneamente.
+
+## 🏗️ Arquitectura
 
 ```
-october-cms-multi/
-├── shared/                          # Infraestructura compartida
-│   ├── docker-compose.yml         # NGINX + PostgreSQL + Redis
-│   ├── nginx/
-│   │   ├── nginx.conf             # Configuración principal
-│   │   └── sites/
-│   │       ├── v3.conf            # Virtual host v3.7
-│   │       └── v4.conf            # Virtual host v4.0
-│   ├── database/
-│   │   └── init.sql               # Inicialización DB
-│   └── manage-shared.sh           # Gestión infraestructura
-├── v3/                             # October CMS v3.7 independiente
-│   ├── Dockerfile                 # Imagen v3.7 minimalista
-│   ├── docker-compose.yml         # Solo aplicación v3.7
-│   ├── .env                       # Variables v3.7
-│   ├── manage-v3.sh               # Control v3.7
-│   └── october/                   # Código October v3.7
-├── v4/                             # October CMS v4.0 independiente
-│   ├── Dockerfile                 # Imagen v4.0 minimalista
-│   ├── docker-compose.yml         # Solo aplicación v4.0
-│   ├── .env                       # Variables v4.0
-│   ├── manage-v4.sh               # Control v4.0
-│   └── october/                   # Código October v4.0
-├── data/                           # Datos persistentes
-│   ├── postgres/                  # Base de datos compartida
-│   ├── nginx-logs/                # Logs NGINX
-│   └── uploads/                   # Uploads compartidos (opcional)
-└── master-control.sh              # Control maestro (opcional)
+shared/                 # Infraestructura compartida
+├── nginx/             # NGINX como proxy reverso
+├── postgres/          # PostgreSQL con esquemas separados
+└── redis/             # Redis compartido
+
+v3/                    # October CMS 3.7 (Laravel 10, PHP 8.1)
+└── october/           # Código de la aplicación
+
+v4/                    # October CMS 4.0 (Laravel 12, PHP 8.2)
+└── october/           # Código de la aplicación
 ```
 
-## 🔗 **Infraestructura Compartida**
+## 🚀 Inicio Rápido
 
-### **Servicios Compartidos (shared/docker-compose.yml):**
-- **🌐 NGINX**: Proxy reverso con virtual hosts
-- **🐘 PostgreSQL**: Base de datos para ambas versiones
-- **🔴 Redis**: Cache compartido
-- **📧 MailHog**: Servidor correo desarrollo
-
-### **Aplicaciones Independientes:**
-- **📦 October v3.7**: Container separado
-- **📦 October v4.0**: Container separado
-
-## 🎯 **Beneficios de esta Arquitectura**
-
-### ✅ **Infraestructura Compartida:**
-- **Una sola base de datos** con esquemas separados
-- **Un solo NGINX** con virtual hosts
-- **Recursos optimizados** (menos memoria/CPU)
-- **Logs centralizados**
-
-### ✅ **Aplicaciones Independientes:**
-- **Encender/apagar** cada versión por separado
-- **Desarrollo independiente** sin interferencias
-- **Deploy independiente** a producción
-- **Testing aislado** de cada versión
-
-### ✅ **Flexibilidad Máxima:**
 ```bash
-# Solo infraestructura
-./shared/manage-shared.sh start
-
-# Solo October v3.7
-./v3/manage-v3.sh start
-
-# Solo October v4.0  
-./v4/manage-v4.sh start
-
-# Ambas versiones
-./master-control.sh start-all
-
-# Comparación lado a lado
-./master-control.sh compare
-```
-
-## 🌐 **Configuración NGINX Compartido**
-
-### **Virtual Hosts:**
-- **v3.october.local** → October v3.7 (puerto 8037)
-- **v4.october.local** → October v4.0 (puerto 8040)
-- **october.local** → Panel selector
-
-### **Proxy Configuration:**
-```nginx
-# v3.october.local → october-v3:80
-upstream october_v3 {
-    server october-v3:80;
-}
-
-# v4.october.local → october-v4:80  
-upstream october_v4 {
-    server october-v4:80;
-}
-```
-
-## 🗄️ **PostgreSQL Compartido**
-
-### **Esquemas Separados:**
-```sql
--- Base de datos: october_shared
--- Esquema v3: october_v3.*
--- Esquema v4: october_v4.*
-
-CREATE SCHEMA october_v3;
-CREATE SCHEMA october_v4;
-```
-
-### **Configuración por Versión:**
-```bash
-# v3.7
-DB_PREFIX=v3_
-DB_SCHEMA=october_v3
-
-# v4.0  
-DB_PREFIX=v4_
-DB_SCHEMA=october_v4
-```
-
-## 🚀 **Casos de Uso**
-
-### **Desarrollo Normal:**
-```bash
-# 1. Levantar infraestructura
-cd shared && ./manage-shared.sh start
-
-# 2. Desarrollar solo en v3.7
-cd ../v3 && ./manage-v3.sh start
-
-# 3. Probar algo en v4.0
-cd ../v4 && ./manage-v4.sh start
-```
-
-### **Testing de Migración:**
-```bash
-# 1. Infraestructura compartida
-cd shared && ./manage-shared.sh start
-
-# 2. Ambas versiones
-cd ../v3 && ./manage-v3.sh start
-cd ../v4 && ./manage-v4.sh start
-
-# 3. Comparar lado a lado
-open http://v3.october.local
-open http://v4.october.local
-```
-
-### **Producción Individual:**
-```bash
-# Solo v3.7 en producción
-cd shared && ./manage-shared.sh start
-cd ../v3 && ./manage-v3.sh start
-
-# O solo v4.0 en producción
-cd shared && ./manage-shared.sh start  
-cd ../v4 && ./manage-v4.sh start
-```
-
-## 🎯 **Próximos Pasos**
-
-1. **Crear infraestructura compartida** (shared/)
-2. **Dockerfiles minimalistas** para v3.7 y v4.0
-3. **Scripts de gestión** independientes
-4. **Script maestro** para orquestación
-5. **Testing** de la arquitectura completa
-
-
-## 🎯 **Uso script manage-shared.sh**
-
-El script manage-shared.sh completo para gestionar la infraestructura compartida. Este script incluye todas las funcionalidades necesarias:
-🎯 Características Principales:
-📋 Comandos Disponibles:
-
-start [profile] - Iniciar infraestructura (development/production)
-stop - Detener servicios
-restart - Reiniciar servicios
-status - Estado completo del sistema
-logs [service] [-f] - Ver logs (con opción follow)
-backup - Backup automático con timestamp
-restore <path> - Restaurar desde backup
-clean - Limpieza completa
-update - Actualizar imágenes Docker
-debug - Información de troubleshooting
-
-🛠️ Funcionalidades Técnicas:
-
-Verificación de dependencias (Docker, permisos)
-Creación automática de directorios de datos
-Gestión de red Docker compartida
-Health checks para todos los servicios
-Inicio secuencial (DB primero, luego web)
-Backups completos (PostgreSQL por esquemas, Redis, configs)
-Colores y logging estructurado
-Perfiles development/production
-
-💾 Sistema de Backup:
-
-Backup completo de PostgreSQL (full + por esquemas)
-Backup de Redis
-Backup de configuraciones NGINX
-Información detallada del backup
-Restore con confirmación de seguridad
-
-🔍 Monitoreo y Debug:
-
-Estado de todos los containers
-Health checks específicos por servicio
-URLs de acceso directo
-Información del sistema
-Verificación de archivos requeridos
-
-📝 Uso del Script:
-# Hacer ejecutable
-chmod +x shared/manage-shared.sh
-
-# Iniciar infraestructura para desarrollo
-./shared/manage-shared.sh start
-
-# Ver estado completo
-./shared/manage-shared.sh status
-
-# Ver logs de NGINX en tiempo real
-./shared/manage-shared.sh logs nginx-shared -f
-
-# Crear backup
-./shared/manage-shared.sh backup
-
-# Ayuda completa
-./shared/manage-shared.sh help
-
-
-## 🎯 **Uso script manage-v3.sh**
-
-
-🎯 Características Principales:
-📋 Comandos Disponibles:
-
-start - Iniciar October v3.7 (verifica infraestructura compartida)
-stop/restart - Control del container
-install - Instalación automática completa de October v3.7
-status - Estado detallado con health checks
-artisan <cmd> - Proxy para comandos Artisan
-composer <cmd> - Proxy para comandos Composer
-shell - Acceso directo al container
-logs [-f] - Visualización de logs
-backup/restore - Sistema completo de backup
-clean - Limpieza total (files, DB schema, logs)
-update - Actualización de October y dependencias
-
-🛠️ Funcionalidades Técnicas:
-Verificaciones Inteligentes:
-
-Dependencias del sistema (Docker, Docker Compose)
-Estado de infraestructura compartida (red, PostgreSQL, Redis)
-Estado de instalación de October
-Health checks de PHP-FPM, DB y Redis
-
-Instalación Automática:
-./v3/manage-v3.sh install
-
-Descarga October v3.7 via Composer
-Configura .env automáticamente
-Ejecuta migraciones
-Crea usuario admin (admin-v3@localhost / admin123v3)
-Instala Builder Plugin
-Configura permisos correctos
-
-Sistema de Backup Específico:
-
-Backup solo del esquema october_v3 (no afecta v4)
-Backup de archivos de aplicación comprimidos
-Backup de configuraciones (.env, docker-compose)
-Restore selectivo con confirmación
-Información detallada del backup
-
-Integración con Infraestructura Compartida:
-
-Verifica automáticamente que la infraestructura esté corriendo
-Usa la red Docker compartida october_shared_network
-Conecta a PostgreSQL y Redis compartidos
-Esquema de DB separado (october_v3)
-Logs independientes en /data/logs/v3
-
-⚙️ Configuración Automática:
-Variables de Entorno (.env):
-
-# Se crea automáticamente con:
-- October v3.7 específico
-- Laravel 10
-- PHP 8.1
-- Conexión a infraestructura compartida
-- Configuración de admin predefinida
-- Builder Plugin habilitado
-
-Comandos de Desarrollo:
-
-# Artisan commands
-./v3/manage-v3.sh artisan october:version
-./v3/manage-v3.sh artisan make:plugin Author.Plugin
-./v3/manage-v3.sh artisan october:migrate
-
-# Composer operations
-./v3/manage-v3.sh composer require vendor/package
-./v3/manage-v3.sh composer update
-
-# Shell access
-./v3/manage-v3.sh shell
-
-🔍 Status y Monitoreo:
-
-./v3/manage-v3.sh status
-
-Muestra:
-
-Estado del container
-Versión de October instalada
-Lista de plugins
-Health checks (PHP-FPM, DB, Redis)
-URLs de acceso
-Credenciales de admin
-
-💾 Backup y Restore:
-# Crear backup
-./v3/manage-v3.sh backup
-
-# Listar backups disponibles
-./v3/manage-v3.sh restore
-# └── Muestra: /data/backups/v3/v3_20250728_143022/
-
-# Restaurar backup específico
-./v3/manage-v3.sh restore /path/to/backup
-
-📝 Flujo de Uso Típico:
 # 1. Iniciar infraestructura compartida
 cd shared && ./manage-shared.sh start
 
 # 2. Iniciar October v3.7
 cd ../v3 && ./manage-v3.sh start
-
-# 3. Instalar October (primera vez)
 ./manage-v3.sh install
 
-# 4. Verificar estado
-./manage-v3.sh status
-
-# 5. Desarrollo
-./manage-v3.sh artisan make:plugin MyAuthor.MyPlugin
-./manage-v3.sh shell
-
-🌐 URLs de Acceso:
-
-Frontend: http://v3.october.local
-Backend: http://v3.october.local/admin
-Admin: admin-v3@localhost / admin123v3
-
-🔗 Integración con Infraestructura:
-El script está diseñado para trabajar solo cuando la infraestructura compartida está activa. Si no está corriendo, te guía automáticamente:
-
-[ERROR] PostgreSQL compartido no está corriendo
-[WARN] Ejecuta: /path/to/shared/manage-shared.sh start
-
-
-## 🎯 **Uso script manage-v4.sh**
-
-Este script incluye todas las funcionalidades avanzadas específicas para la versión 4.0:
-🚀 Características Distintivas de v4.0:
-🆕 Comandos Exclusivos v4.0:
-
-optimize - Optimizaciones específicas de Laravel 12
-compare - Comparación lado a lado con v3.7
-Verificaciones v4.0 - Features específicas del nuevo dashboard
-
-⚡ Optimizaciones Laravel 12:
-
-./v4/manage-v4.sh optimize
-
-Config cache optimizado
-Route cache mejorado
-View cache avanzado
-Event cache (nuevo en Laravel 12)
-Asset compilation para v4.0
-
-🔍 Función de Comparación:
-
-./v4/manage-v4.sh compare
-
-Compara versiones de October, Laravel y PHP
-Muestra características únicas de v4.0
-URLs de acceso para ambas versiones
-Indica si ambas versiones están corriendo
-
-🛠️ Diferencias Técnicas Clave:
-Base de Datos Separada:
-
-v3.7: Schema october_v3, Redis DB 0
-v4.0: Schema october_v4, Redis DB 1
-
-Versiones de Software:
-
-v3.7: Laravel 10 + PHP 8.1
-v4.0: Laravel 12 + PHP 8.2
-
-Características Avanzadas v4.0:
-
-✨ Nuevo Dashboard mejorado
-🔒 Enhanced Security features
-⚡ Performance optimizations
-🎨 Modern UI/UX
-📱 Better mobile support
-
-📋 Instalación Específica v4.0:
-
-./v4/manage-v4.sh install
-
-Descarga October v4.0 específico
-Configura Laravel 12 optimizations
-Habilita nuevo dashboard
-Crea admin para v4.0 (admin-v4@localhost)
-Aplica cache optimizations automáticamente
-
-💾 Sistema de Backup Avanzado:
-
-Backup del schema october_v4 únicamente
-Incluye cache optimizations de Laravel 12
-Información detallada de características v4.0
-Restore con verificación de features
-
-🎯 Flujo de Uso Comparativo:
-# Infraestructura compartida
-cd shared && ./manage-shared.sh start
-
-# Iniciar ambas versiones
-cd ../v3 && ./manage-v3.sh start
+# 3. Iniciar October v4.0
 cd ../v4 && ./manage-v4.sh start
+./manage-v4.sh install
+```
 
-# Comparar lado a lado
-cd ../v4 && ./manage-v4.sh compare
+## 🌐 URLs de Acceso
 
-# Acceder a ambas versiones:
-# http://v3.october.local (October 3.7)
-# http://v4.october.local (October 4.0)
+- **October v3.7**: http://v3.october.local
+- **October v4.0**: http://v4.october.local
+- **Adminer**: http://localhost:8080
+- **MailHog**: http://localhost:8025
 
-🔧 Comandos Únicos v4.0:
+Credenciales por defecto:
+- Usuario: `admin@localhost`
+- Password: `admin123`
 
-# Optimizar para producción
-./v4/manage-v4.sh optimize
+## 📋 Comandos Disponibles
 
-# Ver características v4.0
-./v4/manage-v4.sh status
+### Infraestructura Compartida
+```bash
+./shared/manage-shared.sh start    # Iniciar servicios
+./shared/manage-shared.sh stop     # Detener servicios
+./shared/manage-shared.sh status   # Ver estado
+./shared/manage-shared.sh logs     # Ver logs
+```
 
-# Comparar con v3.7
-./v4/manage-v4.sh compare
+### October CMS (v3 y v4)
+```bash
+./v3/manage-v3.sh start           # Iniciar October v3.7
+./v3/manage-v3.sh install         # Instalar October
+./v3/manage-v3.sh artisan ...     # Ejecutar Artisan
+./v3/manage-v3.sh composer ...    # Ejecutar Composer
+./v3/manage-v3.sh shell           # Acceder al shell
+```
 
-# Backup con features v4.0
-./v4/manage-v4.sh backup
+### Control Maestro (opcional)
+```bash
+./master-control.sh start-all     # Iniciar todo
+./master-control.sh stop-all      # Detener todo
+./master-control.sh status        # Estado completo
+```
+
+## 🔧 Configuración
+
+### Hosts
+Agrega a `/etc/hosts`:
+```
+127.0.0.1 v3.october.local
+127.0.0.1 v4.october.local
+```
+
+### Base de Datos
+- **Host**: postgres-shared
+- **Puerto**: 5432
+- **Base de datos**: october_shared
+- **Usuario**: october_user
+- **Password**: october_shared_2024
+- **Esquemas**:
+  - v3.7: `october_v3` (prefix: `v3_`)
+  - v4.0: `october_v4` (prefix: `v4_`)
+
+## 📁 Estructura de Datos
+
+```
+data/
+├── postgres/         # Datos PostgreSQL
+├── redis/           # Datos Redis
+├── nginx-logs/      # Logs NGINX
+└── logs/
+    ├── v3/          # Logs October v3.7
+    └── v4/          # Logs October v4.0
+```
+
+## 🛠️ Desarrollo
+
+### Crear un plugin
+```bash
+# Para v3.7
+cd v3 && ./manage-v3.sh artisan make:plugin Acme.Blog
+
+# Para v4.0
+cd v4 && ./manage-v4.sh artisan make:plugin Acme.Blog
+```
+
+### Instalar paquetes
+```bash
+# Composer
+./manage-v3.sh composer require vendor/package
+
+# NPM (dentro del container)
+./manage-v3.sh shell
+npm install package
+```
+
+## 🧹 Limpieza
+
+```bash
+# Limpiar todo (CUIDADO: borra todos los datos)
+./shared/manage-shared.sh clean
+```
+
+## 📋 Requisitos
+
+- Docker 20+
+- Docker Compose 2+
+- 4GB RAM mínimo
+- 10GB espacio en disco
+
+## 🐛 Troubleshooting
+
+### Container no inicia
+```bash
+# Verificar logs
+docker-compose logs container-name
+
+# Reiniciar servicios
+./shared/manage-shared.sh restart
+```
+
+### Error de permisos
+```bash
+# Dentro del container
+chown -R october:october /var/www/html
+chmod -R 755 /var/www/html
+```
+
+### Base de datos no conecta
+```bash
+# Verificar que PostgreSQL esté corriendo
+docker ps | grep postgres
+
+# Test de conexión
+docker exec postgres-shared pg_isready -U october_user
+```
+Estructura recomendada:
+october-cms-multi/
+├── v3/                    # ← Proyecto October v3.7 completo
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── .env
+│   └── manage.sh
+├── v4/                    # ← Proyecto October v4.0 completo  
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── .env
+│   └── manage.sh
+├── shared/                # ← Recursos compartidos opcionales
+│   ├── themes/
+│   ├── plugins/
+│   └── database/
+└── master-control.sh      # ← Script maestro (opcional)
