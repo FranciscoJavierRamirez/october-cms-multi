@@ -1,0 +1,180 @@
+# shared/docker-compose.yml
+# Infraestructura compartida: NGINX + PostgreSQL + Redis
+
+version: '3.8'
+
+services:
+  # ============================================
+  # NGINX - Proxy reverso compartido
+  # ============================================
+  nginx-shared:
+    image: nginx:alpine
+    container_name: october_nginx_shared
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Configuraciones NGINX
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/sites/:/etc/nginx/conf.d/:ro
+      
+      # Logs compartidos
+      - ../data/nginx-logs:/var/log/nginx
+      
+      # SSL certificates (para futuro)
+      - ../data/ssl:/etc/ssl/nginx:ro
+      
+    networks:
+      - october_shared_network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - postgres-shared
+      - redis-shared
+
+  # ============================================
+  # PostgreSQL - Base de datos compartida
+  # ============================================
+  postgres-shared:
+    image: postgres:15-alpine
+    container_name: october_postgres_shared
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=october_shared
+      - POSTGRES_USER=october_user
+      - POSTGRES_PASSWORD=october_shared_2024
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      # Datos persistentes
+      - ../data/postgres:/var/lib/postgresql/data
+      
+      # Script de inicialización
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      
+      # Configuración PostgreSQL optimizada
+      - ./database/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      
+    ports:
+      - "5432:5432"
+    networks:
+      - october_shared_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U october_user -d october_shared"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+
+  # ============================================
+  # Redis - Cache compartido
+  # ============================================
+  redis-shared:
+    image: redis:7-alpine
+    container_name: october_redis_shared
+    restart: unless-stopped
+    volumes:
+      # Datos persistentes
+      - ../data/redis:/data
+      
+      # Configuración Redis
+      - ./redis/redis.conf:/etc/redis/redis.conf:ro
+      
+    ports:
+      - "6379:6379"
+    networks:
+      - october_shared_network
+    command: >
+      redis-server /etc/redis/redis.conf
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --databases 16
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # ============================================
+  # MailHog - Servidor correo desarrollo
+  # ============================================
+  mailhog-shared:
+    image: mailhog/mailhog:latest
+    container_name: october_mailhog_shared
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - october_shared_network
+    profiles:
+      - development
+
+  # ============================================
+  # Adminer - Gestión base de datos
+  # ============================================
+  adminer-shared:
+    image: adminer:4.8.1
+    container_name: october_adminer_shared
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres-shared
+      - ADMINER_DESIGN=pepa-linha
+    networks:
+      - october_shared_network
+    depends_on:
+      - postgres-shared
+    profiles:
+      - development
+
+# ============================================
+# REDES
+# ============================================
+networks:
+  october_shared_network:
+    name: october_shared_network
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/16
+          gateway: 172.30.0.1
+
+# ============================================
+# VOLÚMENES
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../data/postgres
+
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../data/redis
+
+  nginx_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../data/nginx-logs
