@@ -178,3 +178,19 @@ october-cms-multi/
 │   ├── plugins/
 │   └── database/
 └── master-control.sh      # ← Script maestro (opcional)
+
+**📝 Pasos para completar el setup**
+
+Crear todos los archivos faltantes del artifact anterior
+Ejecutar el script de setup:
+
+chmod +x setup.sh
+./setup.sh
+
+Configurar hosts:
+sudo echo "127.0.0.1 v3.october.local v4.october.local" >> /etc/hosts
+
+Iniciar el sistema:
+
+./master-control.sh start-all
+./master-control.sh install-all
